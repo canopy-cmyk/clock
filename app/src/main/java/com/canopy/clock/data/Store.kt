@@ -57,6 +57,17 @@ object Store {
         get() = ToneSettings.from(runCatching { JSONObject(sp.getString("timerTone", "{}")!!) }.getOrNull())
         set(v) { sp.edit().putString("timerTone", v.toJson().toString()).apply(); bump() }
 
+    // ---------- sonidos propios (archivos elegidos por el usuario) ----------
+    fun customSounds(): List<Pair<String, String>> = arr("customSounds").let { a ->
+        (0 until a.length()).map { val o = a.getJSONObject(it); o.getString("u") to o.getString("t") }
+    }
+    fun addCustomSound(uri: String, title: String) {
+        val l = listOf(uri to title) + customSounds().filter { it.first != uri }
+        putArr("customSounds", JSONArray(l.map { JSONObject().put("u", it.first).put("t", it.second) }))
+    }
+    fun removeCustomSound(uri: String) =
+        putArr("customSounds", JSONArray(customSounds().filter { it.first != uri }.map { JSONObject().put("u", it.first).put("t", it.second) }))
+
     // ---------- intervalos ----------
     fun programs(): List<IntervalProgram> = arr("programs").let { a -> (0 until a.length()).map { IntervalProgram.from(a.getJSONObject(it)) } }
     fun saveProgram(p: IntervalProgram) = putArr("programs", JSONArray((programs().filter { it.id != p.id } + p).sortedBy { it.id }.map { it.toJson() }))

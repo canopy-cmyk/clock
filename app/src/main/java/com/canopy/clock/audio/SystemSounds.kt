@@ -21,9 +21,11 @@ object Sounds {
         ALARM("Alarmas", RingtoneManager.TYPE_ALARM),
         NOTIFICATION("Notificaciones", RingtoneManager.TYPE_NOTIFICATION),
         RINGTONE("Tonos de llamada", RingtoneManager.TYPE_RINGTONE),
+        FILES("Mis archivos", -1),
     }
 
     fun list(ctx: Context, kind: Kind): List<Sound> {
+        if (kind == Kind.FILES) return com.canopy.clock.data.Store.customSounds().map { Sound(it.second, it.first) }
         val out = mutableListOf<Sound>()
         runCatching {
             val rm = RingtoneManager(ctx); rm.setType(kind.type)
@@ -144,4 +146,14 @@ object Preview {
         runCatching { mp?.stop() }; runCatching { mp?.release() }; mp = null
         playing.value = null
     }
+}
+
+/** Nombre legible de un archivo de audio elegido en el navegador de archivos. */
+fun fileTitle(ctx: Context, uri: Uri): String {
+    val name = runCatching {
+        ctx.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        }
+    }.getOrNull() ?: uri.lastPathSegment ?: "Archivo"
+    return name.substringBeforeLast('.')
 }

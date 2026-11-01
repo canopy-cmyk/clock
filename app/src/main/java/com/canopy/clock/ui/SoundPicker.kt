@@ -8,6 +8,10 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,14 +72,30 @@ fun SoundPicker(
     val ctx = LocalContext.current
     val playing by Preview.playing.collectAsState()
     var kind by remember { mutableStateOf(kinds.first()) }
-    val sounds = remember(kind) { Sounds.list(ctx, kind) }
+    storeVersion()
+    val sounds = Sounds.list(ctx, kind)
     DisposableEffect(Unit) { onDispose { Preview.stop() } }
+    // navegador de archivos del sistema: cualquier audio del móvil o de una carpeta compartida
+    val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            runCatching { ctx.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            val title = com.canopy.clock.audio.fileTitle(ctx, uri)
+            com.canopy.clock.data.Store.addCustomSound(uri.toString(), title)
+            kind = Sounds.Kind.FILES
+            onPick(uri.toString(), title)
+            Preview.toggle(ctx, uri.toString(), fallbackDefault, volume)
+        }
+    }
 
     Column {
-        if (kinds.size > 1) Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (k in kinds) Chip(k.label, k == kind) { kind = k }
+        val allKinds = kinds + Sounds.Kind.FILES
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            for (k in allKinds) Chip(k.label, k == kind) { kind = k }
         }
-        val rows = listOf(Sounds.Sound(defaultLabel, "")) + sounds
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+            Pill("Elegir archivo…") { pickFile.launch(arrayOf("audio/*", "application/ogg")) }
+        }
+        val rows = if (kind == Sounds.Kind.FILES) sounds else listOf(Sounds.Sound(defaultLabel, "")) + sounds
         for ((i, snd) in rows.withIndex()) {
             if (i > 0) HorizontalDivider(color = C.Line, modifier = Modifier.padding(horizontal = 18.dp))
             val sel = snd.uri == selectedUri
@@ -89,9 +109,15 @@ fun SoundPicker(
                 Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) { if (sel) Dot(C.Orange, 10.dp) }
                 Text(snd.title, style = T.body.copy(fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal), modifier = Modifier.weight(1f).padding(start = 8.dp))
                 SoundBars(playing == snd.uri)
+                if (kind == Sounds.Kind.FILES) Text("Quitar", style = T.small.copy(color = C.Red, fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.clickable { com.canopy.clock.data.Store.removeCustomSound(snd.uri) }.padding(start = 12.dp))
             }
         }
-        if (sounds.isEmpty()) Text("Este móvil no ofrece sonidos de este tipo.", style = T.small, modifier = Modifier.padding(18.dp))
+        if (sounds.isEmpty()) Text(
+            if (kind == Sounds.Kind.FILES) "Aún no has añadido archivos. Pulsa «Elegir archivo…» para usar cualquier audio del móvil."
+            else "Este móvil no ofrece sonidos de este tipo.",
+            style = T.small, modifier = Modifier.padding(18.dp)
+        )
     }
 }
 
