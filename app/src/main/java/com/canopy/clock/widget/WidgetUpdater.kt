@@ -59,8 +59,12 @@ object WidgetUpdater {
         )
         for (id in ids) {
             val o = mgr.getAppWidgetOptions(id)
-            val wDp = max(o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0), o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 110)).coerceAtLeast(60)
-            val hDp = max(o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0), 60).coerceAtLeast(60)
+            // En vertical el ancho real es MIN_WIDTH y el alto MAX_HEIGHT; en horizontal, al revés.
+            val portrait = ctx.resources.configuration.orientation != android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            val minW = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 110); val maxW = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, minW)
+            val minH = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110); val maxH = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, minH)
+            val wDp = (if (portrait) minW else maxW).coerceAtLeast(60)
+            val hDp = (if (portrait) maxH else minH).coerceAtLeast(60)
             var w = wDp * density
             var h = hDp * density
             val area = w * h

@@ -101,6 +101,10 @@ object Faces {
             listOf("Madera", "Manecillas", "Segundero"), isDevice = true, wide = true),
         FaceSpec("despertador", "Despertador", FaceKind.ANALOG, "Despertador de viaje con números grandes luminosos.",
             FaceOptions(Pal.INK, Pal.INK, Color.parseColor("#1FB33A")), listOf("", "Manecillas", "Segundero"), isDevice = true),
+        FaceSpec("mesilla", "Mesilla", FaceKind.ANALOG, "Caja naranja partida con esfera negra redonda.",
+            FaceOptions(Pal.ORANGE, Color.parseColor("#F4F2EC"), Pal.ORANGE), listOf("", "Manecillas", "Segundero"), isDevice = true, wide = true),
+        FaceSpec("estrella", "Estrella", FaceKind.ANALOG, "Esfera crema con estrella de rayos y marco verde.",
+            FaceOptions(Pal.GREEN, Pal.INK, Color.parseColor("#D9412A")), listOf("", "Manecillas", "Segundero"), isDevice = true, wide = true),
         FaceSpec("lcd", "LCD", FaceKind.DIGITAL, "Siete segmentos con los apagados visibles.",
             FaceOptions(Pal.LCD, Color.parseColor("#262A22"), Color.parseColor("#2B2B28"), showSeconds = false),
             listOf("", "Segmentos", ""), isDevice = true, wide = true),
@@ -156,9 +160,17 @@ object FaceRenderer {
     private val path = Path()
 
     fun draw(c: Canvas, w: Float, h: Float, spec: FaceSpec, o: FaceOptions, t: LocalDateTime, fillBackground: Boolean = true) {
-        val s = min(w, h) / 200f
+        // Zona útil del reloj en el espacio 200x200: los aparatos con foto se recortan a su contorno
+        // (más un margen para la sombra) y así llenan el espacio disponible sin deformarse.
+        val bb = DeviceImages.bounds(spec.id)
+        val cl: Float; val ct: Float; val cw: Float; val ch: Float
+        if (bb != null) {
+            cl = PL + bb[0] * PB - 2f; ct = PT + bb[1] * PB - 2f
+            cw = (bb[2] - bb[0]) * PB + 4f; ch = (bb[3] - bb[1]) * PB + 9f
+        } else { cl = 0f; ct = 0f; cw = 200f; ch = 200f }
+        val s = min(w / cw, h / ch)
         c.save()
-        c.translate((w - 200f * s) / 2f, (h - 200f * s) / 2f)
+        c.translate((w - cw * s) / 2f - cl * s, (h - ch * s) / 2f - ct * s)
         c.scale(s, s)
         p.reset(); p.isAntiAlias = true; p.fontFeatureSettings = TNUM
         val nano = t.nano / 1_000_000_000f
@@ -175,6 +187,8 @@ object FaceRenderer {
             "pedestal" -> pedestal(c, o, a)
             "madera" -> madera(c, o, a)
             "despertador" -> despertador(c, o, a)
+            "mesilla" -> photoAnalog(c, o, a, "mesilla", floatArrayOf(0.55f, 0.075f, 0.85f, 0.055f, 0.95f, 0.02f))
+            "estrella" -> photoAnalog(c, o, a, "estrella", floatArrayOf(0.5f, 0.05f, 0.82f, 0.035f, 0.92f, 0.014f))
             "lcd" -> lcd(c, o, t)
             "tubos" -> tubos(c, o, t)
             "matriz" -> matriz(c, o, t)
@@ -342,6 +356,20 @@ object FaceRenderer {
     private fun photo(c: Canvas, img: DeviceImages.Img) {
         dstRect.set(PL, PT, PL + PB, PT + PB)
         c.drawBitmap(img.bitmap!!, null, dstRect, bmpPaint)
+    }
+
+    /** Reloj analógico con foto: manecillas proporcionales al radio medido de la esfera. */
+    private fun photoAnalog(c: Canvas, o: FaceOptions, a: Angles, id: String, hw: FloatArray) {
+        val img = DeviceImages.get(id) ?: run { funcional(c, o, a); return }
+        val bb = DeviceImages.bounds(id)!!
+        shadow(c, px((bb[0] + bb[2]) / 2), py(bb[3]) + 1f, (bb[2] - bb[0]) * PB * 0.42f, 4f)
+        photo(c, img)
+        val cx = px(img.v[0]); val cy = py(img.v[1]); val rr = img.v[2] * PB
+        hand(c, a.h, rr * hw[0], rr * hw[1], o.ink, 0f, cx, cy)
+        hand(c, a.m, rr * hw[2], rr * hw[3], o.ink, 0f, cx, cy)
+        if (o.showSeconds) hand(c, a.s, rr * hw[4], rr * hw[5], o.accent, rr * 0.18f, cx, cy)
+        if (img.v.size > 3) { fill(o.ink); c.drawCircle(cx, cy, img.v[3] * PB, p) }
+        else { fill(o.accent); c.drawCircle(cx, cy, rr * 0.05f, p) }
     }
 
     private fun despertador(c: Canvas, o: FaceOptions, a: Angles) {

@@ -134,5 +134,13 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_despertador" />
         </receiver>
+        <receiver android:name=".widget.WidgetMesilla" android:label="Reloj · Mesilla" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_mesilla" />
+        </receiver>
+        <receiver android:name=".widget.WidgetEstrella" android:label="Reloj · Estrella" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_estrella" />
+        </receiver>
     </application>
 </manifest>
