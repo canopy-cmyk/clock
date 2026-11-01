@@ -21,6 +21,7 @@ object DeviceImages {
         // cartela izquierda (l, t, r, b), borde izq. y der. de la derecha, radio de esquina
         "cubo" to Img(R.drawable.img_cubo, 0.1754f, 0.3708f, 0.4825f, 0.6730f, 0.5175f, 0.8230f, 0.0191f),
         "radio" to Img(R.drawable.img_radio, 0.4099f, 0.4665f, 0.6180f, 0.6332f, 0.6587f, 0.8668f, 0.0112f),
+        "televisor" to Img(R.drawable.img_televisor, 0.1898f, 0.3581f, 0.4769f, 0.6467f, 0.5207f, 0.8070f, 0.0175f),
     )
 
     fun init(ctx: Context) {

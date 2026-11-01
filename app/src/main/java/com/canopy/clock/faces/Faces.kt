@@ -118,7 +118,7 @@ object Faces {
             FaceOptions(Pal.GRAPHITE, Color.parseColor("#3A2410"), Pal.AMBER, showSeconds = false),
             listOf("Carcasa", "Dígitos", "Luz"), hasSeconds = false, isDevice = true),
         FaceSpec("televisor", "Televisor", FaceKind.DIGITAL, "Pantalla redondeada sobre patas, con cartelas.",
-            FaceOptions(Pal.TOMATO, Color.parseColor("#F4F2EC"), Color.parseColor("#1B1B1B"), showSeconds = false), DEV,
+            FaceOptions(Pal.TOMATO, Color.parseColor("#F4F2EC"), Color.parseColor("#2A2A29"), showSeconds = false), listOf("", "Dígitos", "Cartelas"),
             hasSeconds = false, isDevice = true),
     )
 
@@ -590,6 +590,7 @@ object FaceRenderer {
     }
 
     private fun televisor(c: Canvas, o: FaceOptions, t: LocalDateTime, flip: Float) {
+        if (photoFlip(c, o, t, flip, "televisor", 179f, 78f)) return
         shadow(c, 100f, 176f, 72f)
         fill(Color.parseColor("#2A2A2A"))
         c.save(); c.rotate(10f, 47f, 150f); c.drawRect(44f, 150f, 50f, 174f, p); c.restore()
