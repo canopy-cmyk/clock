@@ -112,7 +112,7 @@ object Faces {
             FaceOptions(Pal.OLIVE, Color.parseColor("#F4F2EC"), Color.parseColor("#272727"), showSeconds = false), listOf("", "Dígitos", "Cartelas"),
             hasSeconds = false, isDevice = true),
         FaceSpec("radio", "Radio", FaceKind.DIGITAL, "Radiodespertador con rejilla de altavoz.",
-            FaceOptions(Pal.TEAL, Color.parseColor("#F4F2EC"), Color.parseColor("#1B1B1B"), showSeconds = false), DEV,
+            FaceOptions(Pal.TEAL, Color.parseColor("#F4F2EC"), Color.parseColor("#2A2B29"), showSeconds = false), listOf("", "Dígitos", "Cartelas"),
             hasSeconds = false, isDevice = true, wide = true),
         FaceSpec("torre", "Torre", FaceKind.DIGITAL, "Cartelas LCD retroiluminadas, una encima de otra.",
             FaceOptions(Pal.GRAPHITE, Color.parseColor("#3A2410"), Pal.AMBER, showSeconds = false),
@@ -521,20 +521,24 @@ object FaceRenderer {
         }
     }
 
+    /** Aparato fotográfico con dos cartelas: la foto hace de carcasa y las cartelas se dibujan encima. */
+    private fun photoFlip(c: Canvas, o: FaceOptions, t: LocalDateTime, flip: Float, id: String, shadowY: Float, shadowRx: Float): Boolean {
+        val img = DeviceImages.get(id) ?: return false
+        shadow(c, 100f, shadowY, shadowRx, 4f)
+        photo(c, img)
+        val v = img.v
+        val top = py(v[1]); val h = (v[3] - v[1]) * PB
+        val rad = v[6] * PB
+        val prev = t.minusMinutes(1)
+        val size = h * 0.66f
+        flipCard(c, px(v[0]), top, (v[2] - v[0]) * PB, h, hh(t, o), hh(prev, o), flip, o.accent, o.ink, size, rad)
+        flipCard(c, px(v[4]), top, (v[5] - v[4]) * PB, h, "%02d".format(t.minute), "%02d".format(prev.minute), flip, o.accent, o.ink, size, rad)
+        if (!o.h24) text(c, if (t.hour < 12) "AM" else "PM", px(v[0]) + 2f, top + h - 2f, 4.5f, blend(o.accent, o.ink, 0.6f), Fonts.semi, Paint.Align.LEFT)
+        return true
+    }
+
     private fun cubo(c: Canvas, o: FaceOptions, t: LocalDateTime, flip: Float) {
-        DeviceImages.get("cubo")?.let { img ->
-            shadow(c, 100f, 183f, 74f, 4f)
-            photo(c, img)
-            val v = img.v
-            val top = py(v[1]); val h = (v[3] - v[1]) * PB
-            val rad = v[6] * PB
-            val prev = t.minusMinutes(1)
-            val size = h * 0.66f
-            flipCard(c, px(v[0]), top, (v[2] - v[0]) * PB, h, hh(t, o), hh(prev, o), flip, o.accent, o.ink, size, rad)
-            flipCard(c, px(v[4]), top, (v[5] - v[4]) * PB, h, "%02d".format(t.minute), "%02d".format(prev.minute), flip, o.accent, o.ink, size, rad)
-            if (!o.h24) text(c, if (t.hour < 12) "AM" else "PM", px(v[0]) + 3f, top + h - 4f, 6f, blend(o.accent, o.ink, 0.6f), Fonts.semi, Paint.Align.LEFT)
-            return
-        }
+        if (photoFlip(c, o, t, flip, "cubo", 183f, 74f)) return
         shadow(c, 100f, 170f, 72f)
         fill(darker(o.bg, 0.25f)); rr(c, 64f, 42f, 90f, 54f, 3f)
         fill(o.bg); rr(c, 38f, 50f, 162f, 168f, 18f)
@@ -548,6 +552,7 @@ object FaceRenderer {
     }
 
     private fun radio(c: Canvas, o: FaceOptions, t: LocalDateTime, flip: Float) {
+        if (photoFlip(c, o, t, flip, "radio", 143f, 88f)) return
         shadow(c, 100f, 162f, 90f)
         val metal = Color.parseColor("#D8D6CF")
         fill(darker(metal, 0.2f)); c.drawCircle(58f, 76f, 8f, p)
