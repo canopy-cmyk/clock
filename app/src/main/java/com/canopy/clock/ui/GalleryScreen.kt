@@ -100,7 +100,7 @@ private fun FaceEditor(spec: FaceSpec, onBack: () -> Unit) {
         }
 
         SectionLabel("Colores")
-        SwatchRow(spec.colorLabels[0], o.bg) { save(o.copy(bg = it)) }
+        if (spec.colorLabels[0].isNotBlank()) SwatchRow(spec.colorLabels[0], o.bg) { save(o.copy(bg = it)) }
         SwatchRow(spec.colorLabels[1], o.ink) { save(o.copy(ink = it)) }
         SwatchRow(spec.colorLabels[2], o.accent) { save(o.copy(accent = it)) }
 

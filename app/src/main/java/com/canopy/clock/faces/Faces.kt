@@ -95,7 +95,7 @@ object Faces {
         FaceSpec("bloque", "Bloque", FaceKind.ANALOG, "Media pantalla de color sólido con la hora en grande.",
             FaceOptions(Pal.WHITE, Pal.INK, Pal.ORANGE), listOf("Fondo", "Texto", "Bloque")),
         FaceSpec("pedestal", "Pedestal", FaceKind.ANALOG, "Ojo de buey sobre una columna cromada.",
-            FaceOptions(Pal.CREAM, Pal.WHITE, Pal.ORANGE), listOf("Carcasa", "Manecillas", "Segundero"), isDevice = true),
+            FaceOptions(Pal.CREAM, Color.parseColor("#F4F2EC"), Pal.ORANGE), listOf("", "Manecillas", "Segundero"), isDevice = true),
         FaceSpec("madera", "Madera", FaceKind.ANALOG, "Reloj de sobremesa con marco de nogal.",
             FaceOptions(Pal.WALNUT, Color.parseColor("#2B2B2B"), Color.parseColor("#D9412A")),
             listOf("Madera", "Manecillas", "Segundero"), isDevice = true, wide = true),
@@ -132,6 +132,7 @@ object Fonts {
     var heavy: Typeface = Typeface.DEFAULT_BOLD
     private var loaded = false
     fun init(ctx: Context) {
+        DeviceImages.init(ctx)
         if (loaded) return
         regular = ResourcesCompat.getFont(ctx, R.font.grotesk_400) ?: regular
         semi = ResourcesCompat.getFont(ctx, R.font.grotesk_600) ?: semi
@@ -327,7 +328,27 @@ object FaceRenderer {
         c.restore()
     }
 
+    private val bmpPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val dstRect = RectF()
+
+    /** Dibuja la fotografía del aparato en el recuadro de 184x184 y devuelve el centro y radio de la esfera. */
+    private fun photo(c: Canvas, img: DeviceImages.Img): FloatArray {
+        val box = 184f; val l = 8f; val t = 6f
+        dstRect.set(l, t, l + box, t + box)
+        c.drawBitmap(img.bitmap!!, null, dstRect, bmpPaint)
+        return floatArrayOf(l + img.cx * box, t + img.cy * box, img.r * box)
+    }
+
     private fun pedestal(c: Canvas, o: FaceOptions, a: Angles) {
+        DeviceImages.get("pedestal")?.let { img ->
+            shadow(c, 100f, 189f, 56f, 4f)
+            val (cx, cy, rr) = photo(c, img)
+            hand(c, a.h, rr * 0.55f, rr * 0.085f, o.ink, 0f, cx, cy)
+            hand(c, a.m, rr * 0.85f, rr * 0.06f, o.ink, 0f, cx, cy)
+            if (o.showSeconds) hand(c, a.s, rr * 0.95f, rr * 0.025f, o.accent, rr * 0.2f, cx, cy)
+            fill(o.accent); c.drawCircle(cx, cy, rr * 0.06f, p)
+            return
+        }
         val chrome = Color.parseColor("#C9C9C4"); val chromeHi = Color.parseColor("#EDEDE9"); val chromeLo = Color.parseColor("#9D9D98")
         shadow(c, 100f, 184f, 46f, 6f)
         // base y columna cromadas: tres tonos planos para dar reflejo
