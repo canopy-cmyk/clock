@@ -25,6 +25,8 @@ object DeviceImages {
         "televisor" to Img(R.drawable.img_televisor, 0.1898f, 0.3581f, 0.4769f, 0.6467f, 0.5207f, 0.8070f, 0.0175f),
         // pantalla LCD: l, t, r, b
         "lcd" to Img(R.drawable.img_lcd, 0.0973f, 0.4035f, 0.9019f, 0.6268f),
+        // rejilla LED 19x5: x0, paso x, y0, paso y, radio
+        "matriz" to Img(R.drawable.img_matriz, 0.1252f, 0.0419f, 0.4569f, 0.0363f, 0.0072f),
         // ventanas LCD: izquierda, derecha, y arriba/abajo de cada una
         "torre" to Img(R.drawable.img_torre, 0.2951f, 0.6986f, 0.2711f, 0.4617f, 0.5335f, 0.7265f),
     )

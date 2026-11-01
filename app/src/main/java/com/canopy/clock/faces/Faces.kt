@@ -109,7 +109,7 @@ object Faces {
             listOf("Fondo", "Neón", "Tubos"), hasSeconds = false, wide = true),
         FaceSpec("matriz", "Matriz", FaceKind.DIGITAL, "Rejilla de puntos LED.",
             FaceOptions(Color.parseColor("#140F0E"), Pal.RED, Color.parseColor("#3A2A26"), showSeconds = false),
-            listOf("Fondo", "LED encendido", "LED apagado"), wide = true),
+            listOf("", "LED encendido", ""), isDevice = true, wide = true),
         FaceSpec("cubo", "Cubo", FaceKind.DIGITAL, "Cartelas que caen dentro de un cubo de color.",
             FaceOptions(Pal.OLIVE, Color.parseColor("#F4F2EC"), Color.parseColor("#272727"), showSeconds = false), listOf("", "Dígitos", "Cartelas"),
             hasSeconds = false, isDevice = true),
@@ -542,6 +542,31 @@ object FaceRenderer {
     )
 
     private fun matriz(c: Canvas, o: FaceOptions, t: LocalDateTime) {
+        DeviceImages.get("matriz")?.let { img ->
+            shadow(c, 100f, 143f, 92f, 4f)
+            photo(c, img)
+            val v = img.v
+            val d = digits(t, o)
+            val lit = HashSet<Int>()
+            var col = 1
+            for (ch in listOf(d[0], d[1], ':', d[2], d[3])) {
+                if (ch == ':') {
+                    if (!o.showSeconds || t.second % 2 == 0) { lit += col * 10 + 1; lit += col * 10 + 3 }
+                    col += 2; continue
+                }
+                val rows = DOTS[ch]!!
+                for (row in 0 until 5) for (k in 0 until 3) if (rows[row][k] == '1') lit += (col + k) * 10 + row
+                col += 4
+            }
+            val r = v[4] * PB
+            for (key in lit) {
+                val x = px(v[0] + (key / 10) * v[1]); val y = py(v[2] + (key % 10) * v[3])
+                fillA(o.ink, 0.24f); c.drawCircle(x, y, r * 2f, p)
+                fill(o.ink); c.drawCircle(x, y, r, p)
+                fill(lighter(o.ink, 0.55f)); c.drawCircle(x, y, r * 0.4f, p)
+            }
+            return
+        }
         shadow(c, 100f, 162f, 92f, 5f)
         fill(o.bg); rr(c, 4f, 40f, 196f, 160f, 10f)
         val d = digits(t, o)
