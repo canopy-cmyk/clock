@@ -103,7 +103,7 @@ object Faces {
             FaceOptions(Pal.INK, Pal.INK, Color.parseColor("#1FB33A")), listOf("", "Manecillas", "Segundero"), isDevice = true),
         FaceSpec("lcd", "LCD", FaceKind.DIGITAL, "Siete segmentos con los apagados visibles.",
             FaceOptions(Pal.LCD, Color.parseColor("#262A22"), Color.parseColor("#2B2B28"), showSeconds = false),
-            listOf("Pantalla", "Segmentos", "Marco"), wide = true),
+            listOf("", "Segmentos", ""), isDevice = true, wide = true),
         FaceSpec("tubos", "Tubos", FaceKind.DIGITAL, "Dígitos de neón en tubos de cristal.",
             FaceOptions(Color.parseColor("#1A1714"), Pal.ORANGE, Pal.ORANGE, showSeconds = false),
             listOf("Fondo", "Neón", "Tubos"), hasSeconds = false, wide = true),
@@ -478,6 +478,31 @@ object FaceRenderer {
     }
 
     private fun lcd(c: Canvas, o: FaceOptions, t: LocalDateTime) {
+        DeviceImages.get("lcd")?.let { img ->
+            shadow(c, 100f, 150f, 92f, 4f)
+            photo(c, img)
+            val v = img.v
+            val l = px(v[0]); val tp = py(v[1]); val r = px(v[2]); val b = py(v[3])
+            val h = (b - tp) * 0.68f; val w = h * 0.5f; val th = h * 0.1f; val gap = w * 0.28f; val cg = th * 3
+            var x = (l + r) / 2 - (4 * w + 3 * gap + cg) / 2; val y = (tp + b) / 2 - h / 2
+            val off = Color.argb(22, 0, 0, 0)
+            val d = digits(t, o)
+            val colonOn = !o.showSeconds || t.second % 2 == 0
+            for (i in 0..3) {
+                segDigit(c, d[i], x, y, w, h, o.ink, off, th)
+                x += w + gap
+                if (i == 1) {
+                    fill(if (colonOn) o.ink else off)
+                    val cx = x + cg / 2 - gap / 2 - th / 2
+                    c.drawRect(cx, y + h * 0.28f, cx + th, y + h * 0.28f + th, p)
+                    c.drawRect(cx, y + h * 0.64f, cx + th, y + h * 0.64f + th, p)
+                    x += cg
+                }
+            }
+            if (o.showSeconds) text(c, "%02d".format(t.second), r - 3f, tp + 7f, 5.5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
+            if (!o.h24) text(c, if (t.hour < 12) "AM" else "PM", r - 3f, b - 3f, 5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
+            return
+        }
         shadow(c, 100f, 166f, 92f, 5f)
         fill(o.accent); rr(c, 4f, 36f, 196f, 164f, 10f)
         fill(lighter(o.accent, 0.12f)); rr(c, 4f, 36f, 196f, 42f, 3f)
