@@ -82,76 +82,53 @@
 
         <receiver android:name=".alarm.AlarmReceiver" android:exported="false" />
         <receiver android:name=".alarm.ActionReceiver" android:exported="false" />
-        <receiver android:name=".widget.WidgetTickReceiver" android:exported="false" />
-        <receiver android:name=".alarm.BootReceiver" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="android.intent.action.TIME_SET" />
-                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
-                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
-            </intent-filter>
-        </receiver>
-
         <receiver android:name=".widget.WidgetFuncional" android:label="Reloj · Funcional" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_funcional" />
-        </receiver>
-        <receiver android:name=".widget.WidgetIndices" android:label="Reloj · Índices" android:exported="false">
-            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_indices" />
-        </receiver>
-        <receiver android:name=".widget.WidgetGeometrico" android:label="Reloj · Geométrico" android:exported="false">
-            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_geometrico" />
-        </receiver>
-        <receiver android:name=".widget.WidgetDiscos" android:label="Reloj · Discos" android:exported="false">
-            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_discos" />
         </receiver>
         <receiver android:name=".widget.WidgetInstrumento" android:label="Reloj · Instrumento" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_instrumento" />
         </receiver>
-        <receiver android:name=".widget.WidgetHerramienta" android:label="Reloj · Herramienta" android:exported="false">
-            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_herramienta" />
-        </receiver>
         <receiver android:name=".widget.WidgetBloque" android:label="Reloj · Bloque" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_bloque" />
+        </receiver>
+        <receiver android:name=".widget.WidgetPedestal" android:label="Reloj · Pedestal" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_pedestal" />
+        </receiver>
+        <receiver android:name=".widget.WidgetMadera" android:label="Reloj · Madera" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_madera" />
         </receiver>
         <receiver android:name=".widget.WidgetLcd" android:label="Reloj · LCD" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_lcd" />
         </receiver>
-        <receiver android:name=".widget.WidgetPersiana" android:label="Reloj · Persiana" android:exported="false">
-            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_persiana" />
-        </receiver>
         <receiver android:name=".widget.WidgetTubos" android:label="Reloj · Tubos" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_tubos" />
-        </receiver>
-        <receiver android:name=".widget.WidgetVfd" android:label="Reloj · VFD" android:exported="false">
-            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_vfd" />
         </receiver>
         <receiver android:name=".widget.WidgetMatriz" android:label="Reloj · Matriz" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_matriz" />
         </receiver>
-        <receiver android:name=".widget.WidgetTipografico" android:label="Reloj · Tipográfico" android:exported="false">
+        <receiver android:name=".widget.WidgetCubo" android:label="Reloj · Cubo" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_tipografico" />
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_cubo" />
         </receiver>
-        <receiver android:name=".widget.WidgetPalabras" android:label="Reloj · Palabras" android:exported="false">
+        <receiver android:name=".widget.WidgetRadio" android:label="Reloj · Radio" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_palabras" />
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_radio" />
         </receiver>
-        <receiver android:name=".widget.WidgetBinario" android:label="Reloj · Binario" android:exported="false">
+        <receiver android:name=".widget.WidgetTorre" android:label="Reloj · Torre" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_binario" />
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_torre" />
+        </receiver>
+        <receiver android:name=".widget.WidgetTelevisor" android:label="Reloj · Televisor" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_televisor" />
         </receiver>
     </application>
 </manifest>

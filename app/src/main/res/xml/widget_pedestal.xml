@@ -10,5 +10,5 @@
     android:widgetCategory="home_screen|keyguard"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_face"
-    android:previewImage="@drawable/preview_binario"
+    android:previewImage="@drawable/preview_pedestal"
     android:description="@string/widget_desc" />
