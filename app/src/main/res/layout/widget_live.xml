@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget en vivo: la carcasa es una imagen fija y la hora la mueve el propio sistema
+     (reloj analógico y reloj de texto nativos), así nunca se queda congelado. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+  <FrameLayout
+      android:id="@+id/frame"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_gravity="center">
+    <ImageView
+        android:id="@+id/bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY" />
+    <TextClock
+        android:id="@+id/t_heavy1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/grotesk_800"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone"
+        android:letterSpacing="-0.03"
+        android:fontFeatureSettings="tnum" />
+    <TextClock
+        android:id="@+id/t_heavy2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/grotesk_800"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone"
+        android:letterSpacing="-0.03"
+        android:fontFeatureSettings="tnum" />
+    <TextClock
+        android:id="@+id/t_heavy3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/grotesk_800"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone"
+        android:letterSpacing="-0.04"
+        android:fontFeatureSettings="tnum" />
+    <TextClock
+        android:id="@+id/t_semi1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="left|top"
+        android:fontFamily="@font/grotesk_600"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone" />
+    <TextClock
+        android:id="@+id/t_reg1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="left|top"
+        android:fontFamily="@font/grotesk_400"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone" />
+    <TextClock
+        android:id="@+id/t_seg1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/seg7"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone" />
+    <TextClock
+        android:id="@+id/t_segw1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/seg7"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone"
+        android:letterSpacing="0.21" />
+    <TextClock
+        android:id="@+id/t_segw2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/seg7"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone"
+        android:letterSpacing="0.21" />
+    <TextClock
+        android:id="@+id/t_dots1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/dots"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone" />
+    <TextClock
+        android:id="@+id/t_tube1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/tube"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone" />
+    <TextClock
+        android:id="@+id/t_tube2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:gravity="center_horizontal|top"
+        android:fontFamily="@font/tube"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:visibility="gone" />
+    <AnalogClock
+        android:id="@+id/clock1"
+        android:layout_width="10px"
+        android:layout_height="10px"
+        android:layout_gravity="top|left"
+        android:visibility="gone" />
+    <AnalogClock
+        android:id="@+id/clock2"
+        android:layout_width="10px"
+        android:layout_height="10px"
+        android:layout_gravity="top|left"
+        android:visibility="gone" />
+    <ImageView
+        android:id="@+id/ov"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:visibility="gone" />
+  </FrameLayout>
+</FrameLayout>

@@ -136,6 +136,9 @@ object Fonts {
     var regular: Typeface = Typeface.DEFAULT
     var semi: Typeface = Typeface.DEFAULT_BOLD
     var heavy: Typeface = Typeface.DEFAULT_BOLD
+    var seg: Typeface = Typeface.MONOSPACE
+    var dots: Typeface = Typeface.MONOSPACE
+    var tube: Typeface = Typeface.DEFAULT
     private var loaded = false
     fun init(ctx: Context) {
         DeviceImages.init(ctx)
@@ -143,6 +146,9 @@ object Fonts {
         regular = ResourcesCompat.getFont(ctx, R.font.grotesk_400) ?: regular
         semi = ResourcesCompat.getFont(ctx, R.font.grotesk_600) ?: semi
         heavy = ResourcesCompat.getFont(ctx, R.font.grotesk_800) ?: heavy
+        seg = ResourcesCompat.getFont(ctx, R.font.seg7) ?: seg
+        dots = ResourcesCompat.getFont(ctx, R.font.dots) ?: dots
+        tube = ResourcesCompat.getFont(ctx, R.font.tube) ?: tube
         loaded = true
     }
 }
@@ -159,6 +165,46 @@ object FaceRenderer {
     private const val TNUM = "tnum"
     private val path = Path()
 
+    // ---------- capa en vivo para widgets ----------
+    /** Manecilla que moverá el sistema: tipo 0 hora, 1 minuto, 2 segundo. Todo en píxeles del bitmap. */
+    class HandRec(val type: Int, val len: Float, val wd: Float, val color: Int, val tail: Float, val cx: Float, val cy: Float, val cap: Paint.Cap)
+
+    /** Texto que pondrá el sistema (reloj de texto nativo). x/w en píxeles, baseline en píxeles. */
+    class TextRec(val font: String, val pattern24: String, val pattern12: String, val sample: String, val left: Float, val width: Float,
+                  val baseline: Float, val size: Float, val color: Int, val spacing: Float, val centered: Boolean)
+
+    class Live { val hands = mutableListOf<HandRec>(); val texts = mutableListOf<TextRec>(); var usesOverlay = false }
+
+    private var live: Live? = null
+    private var ov: Canvas? = null
+    private val mtx = android.graphics.Matrix()
+    private val pts = FloatArray(2)
+
+    private fun map(c: Canvas, x: Float, y: Float): FloatArray {
+        @Suppress("DEPRECATION") c.getMatrix(mtx)
+        pts[0] = x; pts[1] = y; mtx.mapPoints(pts); return floatArrayOf(pts[0], pts[1])
+    }
+    private fun mapLen(c: Canvas, v: Float): Float { @Suppress("DEPRECATION") c.getMatrix(mtx); return mtx.mapRadius(v) }
+
+    private fun recText(c: Canvas, font: String, p24: String, p12: String, sample: String, x: Float, w: Float, baseline: Float,
+                        size: Float, color: Int, spacing: Float, centered: Boolean): Boolean {
+        val l = live ?: return false
+        val a = map(c, x, baseline)
+        l.texts += TextRec(font, p24, p12, sample, a[0], mapLen(c, w), a[1], mapLen(c, size), color, spacing, centered)
+        return true
+    }
+
+    /**
+     * Dibuja solo la parte fija de un reloj (carcasa, esfera, cartelas vacías) y devuelve
+     * qué manecillas y qué textos debe animar el sistema encima. La capa [overlay] recibe
+     * lo que va por encima de los números (sombra y eje de las cartelas).
+     */
+    fun drawStatic(c: Canvas, overlay: Canvas, w: Float, h: Float, spec: FaceSpec, o: FaceOptions): Live {
+        val l = Live(); live = l; ov = overlay; cardIndex = 0
+        try { draw(c, w, h, spec, o, LocalDateTime.now()) } finally { live = null; ov = null }
+        return l
+    }
+
     fun draw(c: Canvas, w: Float, h: Float, spec: FaceSpec, o: FaceOptions, t: LocalDateTime, fillBackground: Boolean = true) {
         // Zona útil del reloj en el espacio 200x200: los aparatos con foto se recortan a su contorno
         // (más un margen para la sombra) y así llenan el espacio disponible sin deformarse.
@@ -172,14 +218,16 @@ object FaceRenderer {
         c.save()
         c.translate((w - cw * s) / 2f - cl * s, (h - ch * s) / 2f - ct * s)
         c.scale(s, s)
+        ov?.let { it.save(); it.translate((w - cw * s) / 2f - cl * s, (h - ch * s) / 2f - ct * s); it.scale(s, s) }
         p.reset(); p.isAntiAlias = true; p.fontFeatureSettings = TNUM
         val nano = t.nano / 1_000_000_000f
         val sec = t.second + if (o.sweep) nano else 0f
         val min = t.minute + sec / 60f
         val hr = (t.hour % 12) + min / 60f
-        val a = Angles(hr * 30f, min * 6f, sec * 6f)
+        // en modo estático los ángulos son marcas que [hand] reconoce para anotar la manecilla
+        val a = if (live != null) Angles(-1000f, -2000f, -3000f) else Angles(hr * 30f, min * 6f, sec * 6f)
         // las cartelas caen durante el primer medio segundo de cada minuto
-        val flip = if (t.second == 0) (nano / 0.5f).coerceIn(0f, 1f) else 1f
+        val flip = if (live != null) 1f else if (t.second == 0) (nano / 0.5f).coerceIn(0f, 1f) else 1f
         when (spec.id) {
             "funcional" -> funcional(c, o, a)
             "instrumento" -> instrumento(c, o, a)
@@ -198,6 +246,7 @@ object FaceRenderer {
             "televisor" -> televisor(c, o, t, flip)
         }
         c.restore()
+        ov?.restore()
     }
 
     private class Angles(val h: Float, val m: Float, val s: Float)
@@ -212,6 +261,13 @@ object FaceRenderer {
     private fun rr(c: Canvas, l: Float, t: Float, rt: Float, b: Float, rad: Float) { r.set(l, t, rt, b); c.drawRoundRect(r, rad, rad, p) }
 
     private fun hand(c: Canvas, angle: Float, len: Float, wd: Float, color: Int, tail: Float = 0f, cx: Float = 100f, cy: Float = 100f, cap: Paint.Cap = Paint.Cap.ROUND) {
+        val l = live
+        if (l != null && angle <= -999f) {
+            val type = when (angle) { -1000f -> 0; -2000f -> 1; else -> 2 }
+            val pc = map(c, cx, cy)
+            l.hands += HandRec(type, mapLen(c, len), mapLen(c, wd), color, mapLen(c, tail), pc[0], pc[1], cap)
+            return
+        }
         stroke(color, wd, cap)
         c.save(); c.rotate(angle, cx, cy)
         c.drawLine(cx, cy + tail, cx, cy - len, p)
@@ -265,10 +321,16 @@ object FaceRenderer {
         val mid = tp + h / 2
         if (top) c.clipRect(l, tp, l + w, mid) else c.clipRect(l, mid, l + w, tp + h)
         fill(card); rr(c, l, tp, l + w, tp + h, rad)
-        centeredText(c, txt, l + w / 2, mid + size * 0.02f, size, ink, Fonts.heavy, -0.03f)
-        if (!top) { fillA(Color.BLACK, 0.16f); rr(c, l, tp, l + w, tp + h, rad) }
+        if (live == null) {
+            centeredText(c, txt, l + w / 2, mid + size * 0.02f, size, ink, Fonts.heavy, -0.03f)
+            if (!top) { fillA(Color.BLACK, 0.16f); rr(c, l, tp, l + w, tp + h, rad) }
+        } else if (!top) {
+            ov?.let { o2 -> o2.save(); o2.clipRect(l, mid, l + w, tp + h); fillA(Color.BLACK, 0.16f); rr(o2, l, tp, l + w, tp + h, rad); o2.restore() }
+        }
         c.restore()
     }
+
+    private var cardIndex = 0
 
     private fun flipCard(c: Canvas, l: Float, tp: Float, w: Float, h: Float, now: String, old: String, prog: Float, card: Int, ink: Int, size: Float, rad: Float = 3.5f) {
         val mid = tp + h / 2
@@ -282,9 +344,21 @@ object FaceRenderer {
             else { c.scale(1f, -k, 0f, mid); cardHalf(c, l, tp, w, h, now, false, card, ink, size, rad) }
             c.restore()
         }
-        // eje de la cartela
-        fillA(Color.BLACK, 0.65f); c.drawRect(l, mid - 0.8f, l + w, mid + 0.8f, p)
-        fill(darker(card, 0.4f)); c.drawRect(l - 1.5f, mid - 2.5f, l, mid + 2.5f, p); c.drawRect(l + w, mid - 2.5f, l + w + 1.5f, mid + 2.5f, p)
+        // eje de la cartela (en estático va en la capa superior, por encima de los números del sistema)
+        val hc = if (live != null) ov ?: c else c
+        if (live != null) live!!.usesOverlay = true
+        fillA(Color.BLACK, 0.65f); hc.drawRect(l, mid - 0.8f, l + w, mid + 0.8f, p)
+        fill(darker(card, 0.4f)); hc.drawRect(l - 1.5f, mid - 2.5f, l, mid + 2.5f, p); hc.drawRect(l + w, mid - 2.5f, l + w + 1.5f, mid + 2.5f, p)
+        if (live != null) {
+            p.typeface = Fonts.heavy; p.textSize = size; p.letterSpacing = -0.03f
+            val fm = p.fontMetrics
+            val base = mid + size * 0.02f - (fm.ascent + fm.descent) / 2f
+            p.letterSpacing = 0f
+            val p24 = if (cardIndex % 2 == 0) "HH" else "mm"
+            val p12 = if (cardIndex % 2 == 0) "h" else "mm"
+            recText(c, "heavy", p24, p12, "00", l, w, base, size, ink, -0.03f, true)
+            cardIndex++
+        }
     }
 
     private fun flipPair(c: Canvas, o: FaceOptions, t: LocalDateTime, prog: Float, x: Float, y: Float, w: Float, h: Float, gap: Float, size: Float) {
@@ -307,7 +381,7 @@ object FaceRenderer {
         hand(c, a.m, 70f, 5f, o.ink, 10f)
         if (o.showSeconds) {
             hand(c, a.s, 78f, 2f, o.accent, 22f)
-            c.save(); c.rotate(a.s, 100f, 100f); fill(o.accent); c.drawCircle(100f, 120f, 5f, p); c.restore()
+            if (live == null) { c.save(); c.rotate(a.s, 100f, 100f); fill(o.accent); c.drawCircle(100f, 120f, 5f, p); c.restore() }
         }
         fill(o.accent); c.drawCircle(100f, 100f, 5f, p)
     }
@@ -332,12 +406,18 @@ object FaceRenderer {
     private fun bloque(c: Canvas, o: FaceOptions, a: Angles, t: LocalDateTime, bg: Boolean) {
         if (bg) { fill(o.bg); c.drawRect(4f, 4f, 196f, 196f, p) }
         fill(o.accent); c.drawRect(4f, 4f, 196f, 104f, p)
-        text(c, "%02d:%02d".format(hours(t, o.h24), t.minute), 16f, 86f, 64f, o.ink, Fonts.heavy, Paint.Align.LEFT, -0.04f)
-        val es = Locale("es", "ES")
-        val day = t.dayOfWeek.getDisplayName(TextStyle.FULL, es).replaceFirstChar { it.uppercase() }
-        val date = "${t.dayOfMonth} " + t.month.getDisplayName(TextStyle.FULL, es)
-        text(c, day, 16f, 142f, 14f, o.ink, Fonts.semi, Paint.Align.LEFT)
-        text(c, date, 16f, 162f, 14f, blend(o.bg, o.ink, 0.55f), Fonts.regular, Paint.Align.LEFT)
+        if (live != null) {
+            recText(c, "heavy", "HH:mm", "hh:mm", "00:00", 16f, 0f, 86f, 64f, o.ink, -0.04f, false)
+            recText(c, "semi", "EEEE", "EEEE", "", 16f, 0f, 142f, 14f, o.ink, 0f, false)
+            recText(c, "regular", "d MMMM", "d MMMM", "", 16f, 0f, 162f, 14f, blend(o.bg, o.ink, 0.55f), 0f, false)
+        } else {
+            text(c, "%02d:%02d".format(hours(t, o.h24), t.minute), 16f, 86f, 64f, o.ink, Fonts.heavy, Paint.Align.LEFT, -0.04f)
+            val es = Locale("es", "ES")
+            val day = t.dayOfWeek.getDisplayName(TextStyle.FULL, es).replaceFirstChar { it.uppercase() }
+            val date = "${t.dayOfMonth} " + t.month.getDisplayName(TextStyle.FULL, es)
+            text(c, day, 16f, 142f, 14f, o.ink, Fonts.semi, Paint.Align.LEFT)
+            text(c, date, 16f, 162f, 14f, blend(o.bg, o.ink, 0.55f), Fonts.regular, Paint.Align.LEFT)
+        }
         c.save(); c.translate(116f, 114f); c.scale(0.38f, 0.38f)
         stroke(o.ink, 5f); c.drawCircle(100f, 100f, 94f, p)
         hand(c, a.h, 46f, 10f, o.ink); hand(c, a.m, 72f, 7f, o.ink)
@@ -514,10 +594,12 @@ object FaceRenderer {
             val h = (b - tp) * 0.68f; val w = h * 0.5f; val th = h * 0.1f; val gap = w * 0.28f; val cg = th * 3
             var x = (l + r) / 2 - (4 * w + 3 * gap + cg) / 2; val y = (tp + b) / 2 - h / 2
             val off = Color.argb(22, 0, 0, 0)
-            val d = digits(t, o)
-            val colonOn = !o.showSeconds || t.second % 2 == 0
+            val stat = live != null
+            if (stat) recText(c, "seg", "HH:mm", "hh:mm", "00:00", x, 0f, y + h, h, o.ink, 0f, false)
+            val d = if (stat) "8888" else digits(t, o)
+            val colonOn = !stat && (!o.showSeconds || t.second % 2 == 0)
             for (i in 0..3) {
-                segDigit(c, d[i], x, y, w, h, o.ink, off, th)
+                segDigit(c, d[i], x, y, w, h, if (stat) off else o.ink, off, th)
                 x += w + gap
                 if (i == 1) {
                     fill(if (colonOn) o.ink else off)
@@ -527,8 +609,8 @@ object FaceRenderer {
                     x += cg
                 }
             }
-            if (o.showSeconds) text(c, "%02d".format(t.second), r - 3f, tp + 7f, 5.5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
-            if (!o.h24) text(c, if (t.hour < 12) "AM" else "PM", r - 3f, b - 3f, 5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
+            if (!stat && o.showSeconds) text(c, "%02d".format(t.second), r - 3f, tp + 7f, 5.5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
+            if (!stat && !o.h24) text(c, if (t.hour < 12) "AM" else "PM", r - 3f, b - 3f, 5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
             return
         }
         shadow(c, 100f, 166f, 92f, 5f)
@@ -555,10 +637,17 @@ object FaceRenderer {
             var yy = 60f; while (yy < 142f) { c.drawLine(x + 6f, yy, x + 32f, yy, p); yy += 9f }
             // dígitos apagados detrás, como en un tubo real
             centeredText(c, "8", x + 19f, 100f, 54f, blend(o.bg, o.accent, 0.3f), Fonts.regular)
-            centeredText(c, d[i].toString(), x + 19f, 100f, 54f, o.ink, Fonts.regular)
+            if (live == null) centeredText(c, d[i].toString(), x + 19f, 100f, 54f, o.ink, Fonts.regular)
             fillA(Color.WHITE, 0.08f); rr(c, x + 5f, 54f, x + 11f, 140f, 3f)
         }
         fill(o.ink); c.drawCircle(100f, 88f, 2.5f, p); c.drawCircle(100f, 112f, 2.5f, p)
+        if (live != null) {
+            p.typeface = Fonts.tube; p.textSize = 54f
+            val fm = p.fontMetrics
+            val base = 100f - (fm.ascent + fm.descent) / 2f
+            recText(c, "tube", "HH", "hh", "00", 11f, 88f, base, 54f, o.ink, 0f, true)
+            recText(c, "tube", "mm", "mm", "00", 105f, 88f, base, 54f, o.ink, 0f, true)
+        }
     }
 
     private val DOTS = mapOf(
@@ -574,6 +663,12 @@ object FaceRenderer {
             shadow(c, 100f, 143f, 92f, 4f)
             photo(c, img)
             val v = img.v
+            if (live != null) {
+                val dy = v[3] * PB
+                val size = 5 * dy
+                recText(c, "dots", "HH:mm", "hh:mm", "00:00", px(v[0] + v[1]) - 0.231f * size, 0f, py(v[2]) + 4.5f * dy, size, o.ink, 0f, false)
+                return
+            }
             val d = digits(t, o)
             val lit = HashSet<Int>()
             var col = 1
@@ -626,7 +721,7 @@ object FaceRenderer {
         val size = h * 0.66f
         flipCard(c, px(v[0]), top, (v[2] - v[0]) * PB, h, hh(t, o), hh(prev, o), flip, o.accent, o.ink, size, rad)
         flipCard(c, px(v[4]), top, (v[5] - v[4]) * PB, h, "%02d".format(t.minute), "%02d".format(prev.minute), flip, o.accent, o.ink, size, rad)
-        if (!o.h24) text(c, if (t.hour < 12) "AM" else "PM", px(v[0]) + 2f, top + h - 2f, 4.5f, blend(o.accent, o.ink, 0.6f), Fonts.semi, Paint.Align.LEFT)
+        if (live == null && !o.h24) text(c, if (t.hour < 12) "AM" else "PM", px(v[0]) + 2f, top + h - 2f, 4.5f, blend(o.accent, o.ink, 0.6f), Fonts.semi, Paint.Align.LEFT)
         return true
     }
 
@@ -669,15 +764,21 @@ object FaceRenderer {
             photo(c, img)
             val v = img.v
             val l = px(v[0]); val r = px(v[1])
+            val stat = live != null
             for ((i, txt) in listOf(hh(t, o).padStart(2, ' '), "%02d".format(t.minute)).withIndex()) {
                 val top = py(v[2 + i * 2]); val bot = py(v[3 + i * 2])
-                val h = (bot - top) * 0.66f; val w = h * 0.52f; val th = h * 0.11f; val gap = w * 0.7f
+                val h = (bot - top) * 0.66f; val w = h * 0.5f; val th = h * 0.1f; val gap = h * 0.35f
                 val x = (l + r) / 2 - (2 * w + gap) / 2; val y = (top + bot) / 2 - h / 2
                 val off = Color.argb(18, 0, 0, 0)
-                segDigit(c, txt[0], x, y, w, h, o.ink, off, th)
-                segDigit(c, txt[1], x + w + gap, y, w, h, o.ink, off, th)
+                if (stat) {
+                    recText(c, "segw", if (i == 0) "HH" else "mm", if (i == 0) "hh" else "mm", "00", x, 0f, y + h, h, o.ink, 0.21f, false)
+                    segDigit(c, '8', x, y, w, h, off, off, th); segDigit(c, '8', x + w + gap, y, w, h, off, off, th)
+                } else {
+                    segDigit(c, txt[0], x, y, w, h, o.ink, off, th)
+                    segDigit(c, txt[1], x + w + gap, y, w, h, o.ink, off, th)
+                }
             }
-            if (!o.h24) text(c, if (t.hour < 12) "am" else "pm", r - 2f, py(v[3]) - 2f, 5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
+            if (!stat && !o.h24) text(c, if (t.hour < 12) "am" else "pm", r - 2f, py(v[3]) - 2f, 5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
             return
         }
         shadow(c, 100f, 188f, 48f, 5f)
