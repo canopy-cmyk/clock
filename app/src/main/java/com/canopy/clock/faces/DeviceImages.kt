@@ -22,6 +22,8 @@ object DeviceImages {
         "cubo" to Img(R.drawable.img_cubo, 0.1754f, 0.3708f, 0.4825f, 0.6730f, 0.5175f, 0.8230f, 0.0191f),
         "radio" to Img(R.drawable.img_radio, 0.4099f, 0.4665f, 0.6180f, 0.6332f, 0.6587f, 0.8668f, 0.0112f),
         "televisor" to Img(R.drawable.img_televisor, 0.1898f, 0.3581f, 0.4769f, 0.6467f, 0.5207f, 0.8070f, 0.0175f),
+        // ventanas LCD: izquierda, derecha, y arriba/abajo de cada una
+        "torre" to Img(R.drawable.img_torre, 0.2951f, 0.6986f, 0.2711f, 0.4617f, 0.5335f, 0.7265f),
     )
 
     fun init(ctx: Context) {

@@ -116,7 +116,7 @@ object Faces {
             hasSeconds = false, isDevice = true, wide = true),
         FaceSpec("torre", "Torre", FaceKind.DIGITAL, "Cartelas LCD retroiluminadas, una encima de otra.",
             FaceOptions(Pal.GRAPHITE, Color.parseColor("#3A2410"), Pal.AMBER, showSeconds = false),
-            listOf("Carcasa", "Dígitos", "Luz"), hasSeconds = false, isDevice = true),
+            listOf("", "Dígitos", ""), hasSeconds = false, isDevice = true),
         FaceSpec("televisor", "Televisor", FaceKind.DIGITAL, "Pantalla redondeada sobre patas, con cartelas.",
             FaceOptions(Pal.TOMATO, Color.parseColor("#F4F2EC"), Color.parseColor("#2A2A29"), showSeconds = false), listOf("", "Dígitos", "Cartelas"),
             hasSeconds = false, isDevice = true),
@@ -571,6 +571,22 @@ object FaceRenderer {
     }
 
     private fun torre(c: Canvas, o: FaceOptions, t: LocalDateTime) {
+        DeviceImages.get("torre")?.let { img ->
+            shadow(c, 100f, 186f, 58f, 4f)
+            photo(c, img)
+            val v = img.v
+            val l = px(v[0]); val r = px(v[1])
+            for ((i, txt) in listOf(hh(t, o).padStart(2, ' '), "%02d".format(t.minute)).withIndex()) {
+                val top = py(v[2 + i * 2]); val bot = py(v[3 + i * 2])
+                val h = (bot - top) * 0.66f; val w = h * 0.52f; val th = h * 0.11f; val gap = w * 0.7f
+                val x = (l + r) / 2 - (2 * w + gap) / 2; val y = (top + bot) / 2 - h / 2
+                val off = Color.argb(18, 0, 0, 0)
+                segDigit(c, txt[0], x, y, w, h, o.ink, off, th)
+                segDigit(c, txt[1], x + w + gap, y, w, h, o.ink, off, th)
+            }
+            if (!o.h24) text(c, if (t.hour < 12) "am" else "pm", r - 2f, py(v[3]) - 2f, 5f, o.ink, Fonts.semi, Paint.Align.RIGHT)
+            return
+        }
         shadow(c, 100f, 188f, 48f, 5f)
         fill(darker(o.bg, 0.3f)); rr(c, 88f, 14f, 112f, 24f, 3f)
         fill(o.bg); rr(c, 56f, 20f, 144f, 186f, 15f)

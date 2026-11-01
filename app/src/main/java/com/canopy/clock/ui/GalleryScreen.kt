@@ -102,7 +102,7 @@ private fun FaceEditor(spec: FaceSpec, onBack: () -> Unit) {
         SectionLabel("Colores")
         if (spec.colorLabels[0].isNotBlank()) SwatchRow(spec.colorLabels[0], o.bg) { save(o.copy(bg = it)) }
         SwatchRow(spec.colorLabels[1], o.ink) { save(o.copy(ink = it)) }
-        SwatchRow(spec.colorLabels[2], o.accent) { save(o.copy(accent = it)) }
+        if (spec.colorLabels[2].isNotBlank()) SwatchRow(spec.colorLabels[2], o.accent) { save(o.copy(accent = it)) }
 
         SectionLabel("Funcionamiento")
         CardBox {
