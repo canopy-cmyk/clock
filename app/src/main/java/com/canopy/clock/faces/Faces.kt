@@ -99,6 +99,8 @@ object Faces {
         FaceSpec("madera", "Madera", FaceKind.ANALOG, "Reloj de sobremesa con marco de nogal.",
             FaceOptions(Pal.WALNUT, Color.parseColor("#2B2B2B"), Color.parseColor("#D9412A")),
             listOf("Madera", "Manecillas", "Segundero"), isDevice = true, wide = true),
+        FaceSpec("despertador", "Despertador", FaceKind.ANALOG, "Despertador de viaje con números grandes luminosos.",
+            FaceOptions(Pal.INK, Pal.INK, Color.parseColor("#1FB33A")), listOf("", "Manecillas", "Segundero"), isDevice = true),
         FaceSpec("lcd", "LCD", FaceKind.DIGITAL, "Siete segmentos con los apagados visibles.",
             FaceOptions(Pal.LCD, Color.parseColor("#262A22"), Color.parseColor("#2B2B28"), showSeconds = false),
             listOf("Pantalla", "Segmentos", "Marco"), wide = true),
@@ -172,6 +174,7 @@ object FaceRenderer {
             "bloque" -> bloque(c, o, a, t, fillBackground)
             "pedestal" -> pedestal(c, o, a)
             "madera" -> madera(c, o, a)
+            "despertador" -> despertador(c, o, a)
             "lcd" -> lcd(c, o, t)
             "tubos" -> tubos(c, o, t)
             "matriz" -> matriz(c, o, t)
@@ -339,6 +342,18 @@ object FaceRenderer {
     private fun photo(c: Canvas, img: DeviceImages.Img) {
         dstRect.set(PL, PT, PL + PB, PT + PB)
         c.drawBitmap(img.bitmap!!, null, dstRect, bmpPaint)
+    }
+
+    private fun despertador(c: Canvas, o: FaceOptions, a: Angles) {
+        val img = DeviceImages.get("despertador")
+        if (img == null) { funcional(c, o, a); return }
+        shadow(c, 100f, 182f, 72f, 4f)
+        photo(c, img)
+        val cx = px(img.v[0]); val cy = py(img.v[1]); val rr = img.v[2] * PB
+        hand(c, a.h, rr * 0.5f, rr * 0.075f, o.ink, 0f, cx, cy)
+        hand(c, a.m, rr * 0.8f, rr * 0.055f, o.ink, 0f, cx, cy)
+        if (o.showSeconds) hand(c, a.s, rr * 0.9f, rr * 0.022f, o.accent, rr * 0.18f, cx, cy)
+        fill(o.accent); c.drawCircle(cx, cy, rr * 0.05f, p)
     }
 
     private fun pedestal(c: Canvas, o: FaceOptions, a: Angles) {

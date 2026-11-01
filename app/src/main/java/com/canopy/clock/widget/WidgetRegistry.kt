@@ -5,6 +5,7 @@ class WidgetInstrumento : FaceWidget("instrumento")
 class WidgetBloque : FaceWidget("bloque")
 class WidgetPedestal : FaceWidget("pedestal")
 class WidgetMadera : FaceWidget("madera")
+class WidgetDespertador : FaceWidget("despertador")
 class WidgetLcd : FaceWidget("lcd")
 class WidgetTubos : FaceWidget("tubos")
 class WidgetMatriz : FaceWidget("matriz")
@@ -20,6 +21,7 @@ object WidgetRegistry {
         "bloque" to WidgetBloque::class.java,
         "pedestal" to WidgetPedestal::class.java,
         "madera" to WidgetMadera::class.java,
+        "despertador" to WidgetDespertador::class.java,
         "lcd" to WidgetLcd::class.java,
         "tubos" to WidgetTubos::class.java,
         "matriz" to WidgetMatriz::class.java,
