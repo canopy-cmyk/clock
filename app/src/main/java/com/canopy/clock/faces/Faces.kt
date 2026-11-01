@@ -109,7 +109,7 @@ object Faces {
             FaceOptions(Color.parseColor("#140F0E"), Pal.RED, Color.parseColor("#3A2A26"), showSeconds = false),
             listOf("Fondo", "LED encendido", "LED apagado"), wide = true),
         FaceSpec("cubo", "Cubo", FaceKind.DIGITAL, "Cartelas que caen dentro de un cubo de color.",
-            FaceOptions(Pal.OLIVE, Color.parseColor("#F4F2EC"), Color.parseColor("#1B1B1B"), showSeconds = false), DEV,
+            FaceOptions(Pal.OLIVE, Color.parseColor("#F4F2EC"), Color.parseColor("#272727"), showSeconds = false), listOf("", "Dígitos", "Cartelas"),
             hasSeconds = false, isDevice = true),
         FaceSpec("radio", "Radio", FaceKind.DIGITAL, "Radiodespertador con rejilla de altavoz.",
             FaceOptions(Pal.TEAL, Color.parseColor("#F4F2EC"), Color.parseColor("#1B1B1B"), showSeconds = false), DEV,
@@ -243,26 +243,26 @@ object FaceRenderer {
     private fun digits(t: LocalDateTime, o: FaceOptions): String = "%02d%02d".format(hours(t, o.h24), t.minute)
 
     // ---------- cartelas que caen ----------
-    private fun cardHalf(c: Canvas, l: Float, tp: Float, w: Float, h: Float, txt: String, top: Boolean, card: Int, ink: Int, size: Float) {
+    private fun cardHalf(c: Canvas, l: Float, tp: Float, w: Float, h: Float, txt: String, top: Boolean, card: Int, ink: Int, size: Float, rad: Float = 3.5f) {
         c.save()
         val mid = tp + h / 2
         if (top) c.clipRect(l, tp, l + w, mid) else c.clipRect(l, mid, l + w, tp + h)
-        fill(card); rr(c, l, tp, l + w, tp + h, 3.5f)
+        fill(card); rr(c, l, tp, l + w, tp + h, rad)
         centeredText(c, txt, l + w / 2, mid + size * 0.02f, size, ink, Fonts.heavy, -0.03f)
-        if (!top) { fillA(Color.BLACK, 0.16f); rr(c, l, tp, l + w, tp + h, 3.5f) }
+        if (!top) { fillA(Color.BLACK, 0.16f); rr(c, l, tp, l + w, tp + h, rad) }
         c.restore()
     }
 
-    private fun flipCard(c: Canvas, l: Float, tp: Float, w: Float, h: Float, now: String, old: String, prog: Float, card: Int, ink: Int, size: Float) {
+    private fun flipCard(c: Canvas, l: Float, tp: Float, w: Float, h: Float, now: String, old: String, prog: Float, card: Int, ink: Int, size: Float, rad: Float = 3.5f) {
         val mid = tp + h / 2
         val changing = prog < 1f && now != old
-        cardHalf(c, l, tp, w, h, now, true, card, ink, size)
-        cardHalf(c, l, tp, w, h, if (changing) old else now, false, card, ink, size)
+        cardHalf(c, l, tp, w, h, now, true, card, ink, size, rad)
+        cardHalf(c, l, tp, w, h, if (changing) old else now, false, card, ink, size, rad)
         if (changing) {
             val k = cos(prog * PI).toFloat()
             c.save()
-            if (k > 0) { c.scale(1f, k, 0f, mid); cardHalf(c, l, tp, w, h, old, true, card, ink, size) }
-            else { c.scale(1f, -k, 0f, mid); cardHalf(c, l, tp, w, h, now, false, card, ink, size) }
+            if (k > 0) { c.scale(1f, k, 0f, mid); cardHalf(c, l, tp, w, h, old, true, card, ink, size, rad) }
+            else { c.scale(1f, -k, 0f, mid); cardHalf(c, l, tp, w, h, now, false, card, ink, size, rad) }
             c.restore()
         }
         // eje de la cartela
@@ -332,17 +332,20 @@ object FaceRenderer {
     private val dstRect = RectF()
 
     /** Dibuja la fotografía del aparato en el recuadro de 184x184 y devuelve el centro y radio de la esfera. */
-    private fun photo(c: Canvas, img: DeviceImages.Img): FloatArray {
-        val box = 184f; val l = 8f; val t = 6f
-        dstRect.set(l, t, l + box, t + box)
+    private const val PB = 184f; private const val PL = 8f; private const val PT = 6f
+    private fun px(v: Float) = PL + v * PB
+    private fun py(v: Float) = PT + v * PB
+
+    private fun photo(c: Canvas, img: DeviceImages.Img) {
+        dstRect.set(PL, PT, PL + PB, PT + PB)
         c.drawBitmap(img.bitmap!!, null, dstRect, bmpPaint)
-        return floatArrayOf(l + img.cx * box, t + img.cy * box, img.r * box)
     }
 
     private fun pedestal(c: Canvas, o: FaceOptions, a: Angles) {
         DeviceImages.get("pedestal")?.let { img ->
             shadow(c, 100f, 189f, 56f, 4f)
-            val (cx, cy, rr) = photo(c, img)
+            photo(c, img)
+            val cx = px(img.v[0]); val cy = py(img.v[1]); val rr = img.v[2] * PB
             hand(c, a.h, rr * 0.55f, rr * 0.085f, o.ink, 0f, cx, cy)
             hand(c, a.m, rr * 0.85f, rr * 0.06f, o.ink, 0f, cx, cy)
             if (o.showSeconds) hand(c, a.s, rr * 0.95f, rr * 0.025f, o.accent, rr * 0.2f, cx, cy)
@@ -519,6 +522,19 @@ object FaceRenderer {
     }
 
     private fun cubo(c: Canvas, o: FaceOptions, t: LocalDateTime, flip: Float) {
+        DeviceImages.get("cubo")?.let { img ->
+            shadow(c, 100f, 183f, 74f, 4f)
+            photo(c, img)
+            val v = img.v
+            val top = py(v[1]); val h = (v[3] - v[1]) * PB
+            val rad = v[6] * PB
+            val prev = t.minusMinutes(1)
+            val size = h * 0.66f
+            flipCard(c, px(v[0]), top, (v[2] - v[0]) * PB, h, hh(t, o), hh(prev, o), flip, o.accent, o.ink, size, rad)
+            flipCard(c, px(v[4]), top, (v[5] - v[4]) * PB, h, "%02d".format(t.minute), "%02d".format(prev.minute), flip, o.accent, o.ink, size, rad)
+            if (!o.h24) text(c, if (t.hour < 12) "AM" else "PM", px(v[0]) + 3f, top + h - 4f, 6f, blend(o.accent, o.ink, 0.6f), Fonts.semi, Paint.Align.LEFT)
+            return
+        }
         shadow(c, 100f, 170f, 72f)
         fill(darker(o.bg, 0.25f)); rr(c, 64f, 42f, 90f, 54f, 3f)
         fill(o.bg); rr(c, 38f, 50f, 162f, 168f, 18f)

@@ -11,12 +11,15 @@ import com.canopy.clock.R
  * Coordenadas normalizadas 0–1 respecto a la imagen cuadrada.
  */
 object DeviceImages {
-    class Img(val resId: Int, val cx: Float, val cy: Float, val r: Float) {
+    /** v: medidas propias de cada aparato (centro y radio de la esfera, o rectángulos de las cartelas). */
+    class Img(val resId: Int, vararg val v: Float) {
         var bitmap: Bitmap? = null
     }
 
     val ALL: Map<String, Img> = mapOf(
         "pedestal" to Img(R.drawable.img_pedestal, 0.4960f, 0.3329f, 0.2177f),
+        // cartela izquierda (l, t, r, b), borde izq. y der. de la derecha, radio de esquina
+        "cubo" to Img(R.drawable.img_cubo, 0.1754f, 0.3708f, 0.4825f, 0.6730f, 0.5175f, 0.8230f, 0.0191f),
     )
 
     fun init(ctx: Context) {
