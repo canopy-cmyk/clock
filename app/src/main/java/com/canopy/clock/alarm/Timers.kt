@@ -15,8 +15,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.canopy.clock.MainActivity
 import com.canopy.clock.R
-import com.canopy.clock.audio.TonePlayer
-import com.canopy.clock.audio.ToneSynth
+import com.canopy.clock.audio.Sounds
 import com.canopy.clock.data.IntervalProgram
 import com.canopy.clock.data.RunningTimer
 import com.canopy.clock.data.Store
@@ -135,7 +134,7 @@ class IntervalService : Service() {
                 val secLeft = (left + 999) / 1000
                 if (secLeft in 1..3 && secLeft != lastBeepSec) {
                     lastBeepSec = secLeft
-                    TonePlayer.once(ToneSynth.click(), 1f)
+                    Sounds.beep()
                 }
                 if (left <= 0) advance(now)
             }
@@ -149,14 +148,14 @@ class IntervalService : Service() {
         lastBeepSec = -1
         if (next >= s.phases.size) {
             state.value = s.copy(finished = true, index = s.phases.size - 1)
-            TonePlayer.once(ToneSynth.cue(s.program.tone, 3))
+            Sounds.cue(this, s.program.soundUri)
             notifyState()
             handler.postDelayed({ stopSelf() }, 4000)
             return
         }
         val p = s.phases[next]
         state.value = s.copy(index = next, phaseEnd = now + p.seconds * 1000L)
-        TonePlayer.once(ToneSynth.cue(s.program.tone, if (next == 0) 1 else 2))
+        Sounds.cue(this, s.program.soundUri)
         notifyState()
     }
 
@@ -181,7 +180,7 @@ class IntervalService : Service() {
         )
         wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clock:interval")
             .apply { acquire(prog.totalSec * 1000L + 120_000L) }
-        TonePlayer.once(ToneSynth.cue(prog.tone, 1))
+        Sounds.cue(this, prog.soundUri)
         handler.removeCallbacks(tick)
         handler.post(tick)
         return START_NOT_STICKY

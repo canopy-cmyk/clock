@@ -18,7 +18,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.canopy.clock.R
-import com.canopy.clock.audio.TonePlayer
+import com.canopy.clock.audio.AlarmPlayer
 import com.canopy.clock.data.Store
 import com.canopy.clock.data.ToneSettings
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +28,7 @@ class RingService : Service() {
 
     data class Ringing(val kind: String, val id: Int, val title: String, val subtitle: String, val canSnooze: Boolean)
 
-    private var player: TonePlayer? = null
+    private var player: AlarmPlayer? = null
     private var wake: PowerManager.WakeLock? = null
     private val handler = Handler(Looper.getMainLooper())
     private val timeout = Runnable { finish(snooze = false) }
@@ -69,7 +69,7 @@ class RingService : Service() {
         wake = getSystemService(PowerManager::class.java)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clock:ring").apply { acquire(11 * 60_000L) }
 
-        player = TonePlayer(tone).also { it.start(maxSeconds = 600) }
+        player = AlarmPlayer(this, tone).also { it.start() }
         if (tone.vibrate) vibrate()
 
         // abre la pantalla de alarma si el móvil está desbloqueado y la app al frente

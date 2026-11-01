@@ -126,7 +126,7 @@ fun TimerScreen() {
 
         SectionLabel("Sonido del temporizador")
         if (showTone) ToneEditor(Store.timerTone) { Store.timerTone = it }
-        else Box(Modifier.padding(horizontal = 16.dp)) { Pill(Store.timerTone.type.label + " · cambiar") { showTone = true } }
+        else Box(Modifier.padding(horizontal = 16.dp)) { Pill(com.canopy.clock.audio.Sounds.title(ctx, Store.timerTone) + " · cambiar") { showTone = true } }
         Gap(30.dp)
     }
 }

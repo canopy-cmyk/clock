@@ -149,6 +149,7 @@ object Fonts {
 object FaceRenderer {
     private val p = Paint(Paint.ANTI_ALIAS_FLAG)
     private val r = RectF()
+    private const val TNUM = "tnum"
     private val path = Path()
 
     fun draw(c: Canvas, w: Float, h: Float, spec: FaceSpec, o: FaceOptions, t: LocalDateTime, fillBackground: Boolean = true) {
@@ -156,7 +157,7 @@ object FaceRenderer {
         c.save()
         c.translate((w - 200f * s) / 2f, (h - 200f * s) / 2f)
         c.scale(s, s)
-        p.reset(); p.isAntiAlias = true
+        p.reset(); p.isAntiAlias = true; p.fontFeatureSettings = TNUM
         val nano = t.nano / 1_000_000_000f
         val sec = t.second + if (o.sweep) nano else 0f
         val min = t.minute + sec / 60f

@@ -3,7 +3,6 @@ package com.canopy.clock.audio
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
-import com.canopy.clock.data.ToneSettings
 import com.canopy.clock.data.ToneType
 import kotlin.math.PI
 import kotlin.math.exp
@@ -122,57 +121,37 @@ object ToneSynth {
             .build()
 }
 
-/** Reproduce un tono en bucle con subida progresiva de volumen. */
-class TonePlayer(private val s: ToneSettings, private val usage: Int = AudioAttributes.USAGE_ALARM) {
+/** Pitido sintetizado de reserva, solo si ningún sonido del sistema se puede reproducir. */
+class SynthLoop(private val gain: Float) {
     @Volatile private var running = false
-    private var thread: Thread? = null
 
-    fun start(maxSeconds: Int = 600) {
-        if (running || s.type == ToneType.PULSE) return
+    fun start() {
+        if (running) return
         running = true
-        thread = Thread {
-            val track = ToneSynth.newTrack(usage)
-            val loop = ToneSynth.pattern(s.type, s.pitch, s.tempo)
+        Thread {
+            val track = ToneSynth.newTrack()
+            val loop = ToneSynth.toPcm(ToneSynth.pattern(ToneType.QUARTZ, 1f, 1f), gain)
             track.play()
-            val start = System.currentTimeMillis()
-            try {
-                while (running && System.currentTimeMillis() - start < maxSeconds * 1000L) {
-                    val el = (System.currentTimeMillis() - start) / 1000f
-                    val g = if (s.crescendoSec <= 0) 1f else (0.08f + 0.92f * (el / s.crescendoSec)).coerceAtMost(1f)
-                    val pcm = ToneSynth.toPcm(loop, g * s.volume)
-                    track.write(pcm, 0, pcm.size)
-                }
-            } finally {
-                runCatching { track.pause(); track.flush(); track.stop() }
-                track.release()
-            }
-        }.also { it.start() }
+            try { while (running) track.write(loop, 0, loop.size) }
+            finally { runCatching { track.pause(); track.flush(); track.stop() }; track.release() }
+        }.start()
     }
 
-    fun stop() { running = false; thread = null }
+    fun stop() { running = false }
+}
 
-    companion object {
-        /** Reproduce un fragmento corto una vez (vista previa, avisos de intervalo, tic-tac). */
-        fun once(samples: FloatArray, gain: Float = 0.9f, usage: Int = AudioAttributes.USAGE_ALARM) {
-            Thread {
-                val track = ToneSynth.newTrack(usage, samples.size + ToneSynth.RATE / 10)
-                val pcm = ToneSynth.toPcm(samples, gain)
-                track.play()
-                track.write(pcm, 0, pcm.size)
-                // silencio final para que el búfer termine de sonar
-                val tail = ShortArray(ToneSynth.RATE / 5)
-                track.write(tail, 0, tail.size)
-                runCatching { track.stop() }
-                track.release()
-            }.start()
-        }
-
-        fun preview(s: ToneSettings, seconds: Float = 3f) {
-            if (s.type == ToneType.PULSE) return
-            val loop = ToneSynth.pattern(s.type, s.pitch, s.tempo)
-            val n = (ToneSynth.RATE * seconds).toInt()
-            val out = FloatArray(n) { loop[it % loop.size] }
-            once(out, s.volume)
-        }
+/** Fragmentos cortos (tic-tac de la esfera). */
+object TonePlayer {
+    fun once(samples: FloatArray, gain: Float = 0.9f, usage: Int = AudioAttributes.USAGE_ALARM) {
+        Thread {
+            val track = ToneSynth.newTrack(usage, samples.size + ToneSynth.RATE / 10)
+            val pcm = ToneSynth.toPcm(samples, gain)
+            track.play()
+            track.write(pcm, 0, pcm.size)
+            val tail = ShortArray(ToneSynth.RATE / 5)
+            track.write(tail, 0, tail.size)
+            runCatching { track.stop() }
+            track.release()
+        }.start()
     }
 }

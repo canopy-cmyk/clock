@@ -12,24 +12,24 @@ enum class ToneType(val label: String) {
     PULSE("Solo vibración"),
 }
 
+/** Sonido de una alarma o temporizador: un sonido del sistema elegido por el usuario. */
 data class ToneSettings(
-    val type: ToneType = ToneType.QUARTZ,
-    val pitch: Float = 1f,        // multiplicador de frecuencia 0.5–2
-    val tempo: Float = 1f,        // velocidad de la cadencia 0.5–2
-    val crescendoSec: Int = 30,   // segundos hasta volumen máximo (0 = directo)
+    val uri: String = "",          // vacío = sonido de alarma predeterminado del sistema
+    val title: String = "",        // nombre visible del sonido
+    val crescendoSec: Int = 30,    // segundos hasta el volumen máximo (0 = directo)
     val volume: Float = 0.9f,
     val vibrate: Boolean = true,
+    val silent: Boolean = false,   // solo vibración
 ) {
-    fun toJson() = JSONObject().put("type", type.name).put("pitch", pitch.toDouble()).put("tempo", tempo.toDouble())
-        .put("cres", crescendoSec).put("vol", volume.toDouble()).put("vib", vibrate)
+    fun toJson() = JSONObject().put("uri", uri).put("title", title).put("cres", crescendoSec)
+        .put("vol", volume.toDouble()).put("vib", vibrate).put("silent", silent)
 
     companion object {
         fun from(j: JSONObject?): ToneSettings {
             if (j == null) return ToneSettings()
             return ToneSettings(
-                runCatching { ToneType.valueOf(j.optString("type")) }.getOrDefault(ToneType.QUARTZ),
-                j.optDouble("pitch", 1.0).toFloat(), j.optDouble("tempo", 1.0).toFloat(),
-                j.optInt("cres", 30), j.optDouble("vol", 0.9).toFloat(), j.optBoolean("vib", true)
+                j.optString("uri"), j.optString("title"), j.optInt("cres", 30),
+                j.optDouble("vol", 0.9).toFloat(), j.optBoolean("vib", true), j.optBoolean("silent", false)
             )
         }
     }
@@ -122,19 +122,20 @@ data class IntervalProgram(
     val steps: List<IntervalStep>,
     val rounds: Int,
     val cooldown: Int,
-    val tone: ToneType = ToneType.QUARTZ,
+    val soundUri: String = "",       // vacío = notificación predeterminada del sistema
+    val soundTitle: String = "",
 ) {
     val totalSec get() = warmup + cooldown + steps.sumOf { it.seconds } * rounds
 
     fun toJson() = JSONObject().put("id", id).put("n", name).put("w", warmup).put("r", rounds).put("cd", cooldown)
-        .put("tone", tone.name).put("steps", JSONArray(steps.map { it.toJson() }))
+        .put("su", soundUri).put("st", soundTitle).put("steps", JSONArray(steps.map { it.toJson() }))
 
     companion object {
         fun from(j: JSONObject): IntervalProgram {
             val a = j.getJSONArray("steps")
             return IntervalProgram(
                 j.getInt("id"), j.getString("n"), j.optInt("w"), (0 until a.length()).map { IntervalStep.from(a.getJSONObject(it)) },
-                j.optInt("r", 1), j.optInt("cd"), runCatching { ToneType.valueOf(j.optString("tone")) }.getOrDefault(ToneType.QUARTZ)
+                j.optInt("r", 1), j.optInt("cd"), j.optString("su"), j.optString("st")
             )
         }
     }

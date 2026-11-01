@@ -42,12 +42,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.canopy.clock.alarm.CalendarCheck
 import com.canopy.clock.alarm.Scheduler
-import com.canopy.clock.audio.TonePlayer
 import com.canopy.clock.data.Alarm
 import com.canopy.clock.data.AlarmConditions
 import com.canopy.clock.data.Store
-import com.canopy.clock.data.ToneSettings
-import com.canopy.clock.data.ToneType
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -244,29 +241,6 @@ private fun AlarmEditor(id: Int, onDone: () -> Unit) {
             Pill("Borrar", color = C.Red) { Scheduler.cancel(ctx, id); Store.deleteAlarm(id); onDone() }
         }
         Gap(30.dp)
-    }
-}
-
-/** Editor de tono reutilizable (alarmas y temporizadores). */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun ToneEditor(t: ToneSettings, onChange: (ToneSettings) -> Unit) {
-    CardBox {
-        Column(Modifier.padding(vertical = 10.dp)) {
-            FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                for (ty in ToneType.entries) Chip(ty.label, t.type == ty) { onChange(t.copy(type = ty)) }
-            }
-            if (t.type != ToneType.PULSE) {
-                SliderRow("Tono", t.pitch, 0.5f..2f, if (t.pitch < 0.9f) "grave" else if (t.pitch > 1.1f) "agudo" else "original") { onChange(t.copy(pitch = it)) }
-                SliderRow("Cadencia", t.tempo, 0.5f..2f, if (t.tempo < 0.9f) "lenta" else if (t.tempo > 1.1f) "rápida" else "original") { onChange(t.copy(tempo = it)) }
-                SliderRow("Subida de volumen", t.crescendoSec.toFloat(), 0f..120f, if (t.crescendoSec == 0) "directa" else "${t.crescendoSec} s") { onChange(t.copy(crescendoSec = it.toInt())) }
-                SliderRow("Volumen", t.volume, 0.1f..1f, "${(t.volume * 100).toInt()} %") { onChange(t.copy(volume = it)) }
-            }
-            SwitchRow("Vibrar", null, t.vibrate) { onChange(t.copy(vibrate = it)) }
-            if (t.type != ToneType.PULSE) Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-                Pill("Escuchar", filled = true, color = C.Orange) { TonePlayer.preview(t.copy(crescendoSec = 0)) }
-            }
-        }
     }
 }
 

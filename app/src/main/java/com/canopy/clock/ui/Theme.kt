@@ -59,13 +59,13 @@ val Grotesk = FontFamily(
 )
 
 object T {
-    val huge = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.ExtraBold, fontSize = 64.sp, letterSpacing = (-2).sp, color = C.Ink)
-    val big = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.ExtraBold, fontSize = 40.sp, letterSpacing = (-1).sp, color = C.Ink)
-    val title = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp, letterSpacing = (-0.5).sp, color = C.Ink)
-    val head = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = C.Ink)
-    val body = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.Normal, fontSize = 15.sp, color = C.Ink)
-    val small = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.Normal, fontSize = 13.sp, color = C.Muted)
-    val label = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, letterSpacing = 0.6.sp, color = C.Muted)
+    val huge = TextStyle(fontFamily = Grotesk, fontFeatureSettings = "tnum", fontWeight = FontWeight.ExtraBold, fontSize = 64.sp, letterSpacing = (-2).sp, color = C.Ink)
+    val big = TextStyle(fontFamily = Grotesk, fontFeatureSettings = "tnum", fontWeight = FontWeight.ExtraBold, fontSize = 40.sp, letterSpacing = (-1).sp, color = C.Ink)
+    val title = TextStyle(fontFamily = Grotesk, fontFeatureSettings = "tnum", fontWeight = FontWeight.ExtraBold, fontSize = 30.sp, letterSpacing = (-0.5).sp, color = C.Ink)
+    val head = TextStyle(fontFamily = Grotesk, fontFeatureSettings = "tnum", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = C.Ink)
+    val body = TextStyle(fontFamily = Grotesk, fontFeatureSettings = "tnum", fontWeight = FontWeight.Normal, fontSize = 15.sp, color = C.Ink)
+    val small = TextStyle(fontFamily = Grotesk, fontFeatureSettings = "tnum", fontWeight = FontWeight.Normal, fontSize = 13.sp, color = C.Muted)
+    val label = TextStyle(fontFamily = Grotesk, fontFeatureSettings = "tnum", fontWeight = FontWeight.SemiBold, fontSize = 12.sp, letterSpacing = 0.6.sp, color = C.Muted)
 }
 
 @Composable

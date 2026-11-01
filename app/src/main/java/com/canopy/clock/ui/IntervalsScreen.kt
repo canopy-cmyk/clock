@@ -46,7 +46,6 @@ import com.canopy.clock.alarm.TimerNotifier
 import com.canopy.clock.data.IntervalProgram
 import com.canopy.clock.data.IntervalStep
 import com.canopy.clock.data.Store
-import com.canopy.clock.data.ToneType
 import kotlinx.coroutines.delay
 
 private val STEP_COLORS = listOf(0xFFF08A1C, 0xFF3E9B5E, 0xFFE4472B, 0xFF2E5FA8, 0xFFF4D40B, 0xFF8C8A84, 0xFF151515).map { it.toInt() }
@@ -187,8 +186,19 @@ private fun ProgramEditor(id: Int, onDone: () -> Unit) {
             Pill("Añadir fase") { p = p.copy(steps = p.steps + IntervalStep("Fase ${p.steps.size + 1}", 30, STEP_COLORS[p.steps.size % STEP_COLORS.size])) }
         }
         SectionLabel("Aviso entre fases")
-        FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (t in ToneType.entries.filter { it != ToneType.PULSE }) Chip(t.label, p.tone == t) { p = p.copy(tone = t) }
+        var pickSound by remember { mutableStateOf(false) }
+        CardBox {
+            Column(Modifier.padding(vertical = 8.dp)) {
+                Row(Modifier.fillMaxWidth().clickable { pickSound = !pickSound }.padding(horizontal = 18.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(p.soundTitle.ifBlank { "Notificación predeterminada" }, style = T.head, modifier = Modifier.weight(1f))
+                    Text(if (pickSound) "Cerrar" else "Cambiar", style = T.body.copy(fontWeight = FontWeight.SemiBold))
+                }
+                if (pickSound) SoundPicker(p.soundUri, listOf(com.canopy.clock.audio.Sounds.Kind.NOTIFICATION, com.canopy.clock.audio.Sounds.Kind.ALARM),
+                    "Notificación predeterminada", com.canopy.clock.audio.Sounds.defaultNotification()) { uri, title ->
+                    p = p.copy(soundUri = uri, soundTitle = title)
+                }
+                Text("En los 3 últimos segundos de cada fase suena un pitido corto del sistema.", style = T.small, modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp))
+            }
         }
         Text("Total: ${mmss(p.totalSec)}", style = T.head, modifier = Modifier.padding(20.dp))
         Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

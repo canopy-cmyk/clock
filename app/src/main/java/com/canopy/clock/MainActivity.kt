@@ -42,7 +42,7 @@ import com.canopy.clock.ui.AlarmsScreen
 import com.canopy.clock.ui.C
 import com.canopy.clock.ui.ClockScreen
 import com.canopy.clock.ui.ClockTheme
-import com.canopy.clock.ui.Dot
+import com.canopy.clock.ui.NavIcon
 import com.canopy.clock.ui.GalleryScreen
 import com.canopy.clock.ui.IntervalsScreen
 import com.canopy.clock.ui.SettingsScreen
@@ -123,7 +123,7 @@ private fun Root(startTab: String) {
                         Modifier.weight(1f).clickable { tab = id }.padding(vertical = 6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Dot(if (sel) C.Orange else C.Paper, 7.dp)
+                        NavIcon(id, sel)
                         Text(
                             label, maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
                             style = T.small.copy(fontSize = 11.5.sp, color = if (sel) C.Ink else C.Muted, fontWeight = if (sel) FontWeight.ExtraBold else FontWeight.SemiBold),
