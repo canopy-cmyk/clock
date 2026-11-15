@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
@@ -68,6 +69,21 @@ fun TimerScreen() {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Header("Temporizador")
+
+        // accesos directos: un toque y empieza
+        Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            for ((min, col) in listOf(1 to C.Yellow, 5 to C.Orange, 10 to C.Ink)) {
+                Box(
+                    Modifier.size(88.dp).clip(CircleShape).background(col).clickable { TimerControl.start(ctx, min * 60, "$min min") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$min", style = T.big.copy(fontSize = 34.sp, color = if (col == C.Ink) C.Paper else C.Ink), maxLines = 1, softWrap = false)
+                        Text("min", style = T.small.copy(color = if (col == C.Ink) C.Paper else C.Ink, fontWeight = FontWeight.SemiBold))
+                    }
+                }
+            }
+        }
 
         for (t in Store.timers()) RunningCard(t, now)
 

@@ -111,12 +111,22 @@ private fun RunView(s: IntervalService.RunState) {
         if (ph.round > 0) Text("Ronda ${ph.round} de ${s.program.rounds}", style = T.body)
         Box(Modifier.fillMaxWidth().padding(28.dp).aspectRatio(1f), contentAlignment = Alignment.Center) {
             Canvas(Modifier.fillMaxSize()) {
+                val hair = 1.dp.toPx()
                 drawCircle(C.Card)
                 drawArc(color, -90f, 360f * frac, true, Offset.Zero, size)
-                drawCircle(C.Ink, size.minDimension / 2, style = Stroke(3f))
+                drawCircle(C.Ink, size.minDimension / 2 - hair / 2, style = Stroke(hair))
             }
-            Box(Modifier.size(180.dp).clip(CircleShape).background(C.Paper), contentAlignment = Alignment.Center) {
-                Text(TimerNotifier.fmt(left), style = T.huge)
+            // disco interior proporcional al exterior, con cifra en una sola línea que siempre cabe
+            Box(Modifier.fillMaxSize(0.64f).clip(CircleShape).background(C.Paper), contentAlignment = Alignment.Center) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val hair = 1.dp.toPx()
+                    drawCircle(C.Line, size.minDimension / 2 - hair / 2, style = Stroke(hair))
+                }
+                val txt = TimerNotifier.fmt(left)
+                Text(
+                    txt, maxLines = 1, softWrap = false,
+                    style = T.big.copy(fontSize = if (txt.length > 5) 30.sp else 40.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
+                )
             }
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(8.dp).clip(RoundedCornerShape(4.dp)).background(C.Line)) {
