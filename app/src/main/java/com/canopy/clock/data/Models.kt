@@ -71,10 +71,13 @@ data class Alarm(
     val snoozeMin: Int = 9,
     val conditions: AlarmConditions = AlarmConditions(),
     val skipDate: String? = null,       // fecha ISO de la próxima repetición que se omite una vez
+    val date: String? = null,           // fecha ISO concreta (alarmas de un solo día, p. ej. creadas desde Calendario)
+    val eventKey: String? = null,       // evento de Calendario al que va asociada
 ) {
     fun toJson() = JSONObject().put("id", id).put("h", hour).put("m", minute).put("days", JSONArray(days.toList()))
         .put("on", enabled).put("label", label).put("tone", tone.toJson()).put("snooze", snoozeMin)
         .put("cond", conditions.toJson()).put("skip", skipDate ?: JSONObject.NULL)
+        .put("date", date ?: JSONObject.NULL).put("ev", eventKey ?: JSONObject.NULL)
 
     companion object {
         fun from(j: JSONObject): Alarm {
@@ -83,7 +86,9 @@ data class Alarm(
                 j.getInt("id"), j.getInt("h"), j.getInt("m"), (0 until d.length()).map { d.getInt(it) }.toSet(),
                 j.optBoolean("on", true), j.optString("label"), ToneSettings.from(j.optJSONObject("tone")),
                 j.optInt("snooze", 9), AlarmConditions.from(j.optJSONObject("cond")),
-                if (j.isNull("skip")) null else j.optString("skip").ifBlank { null }
+                if (j.isNull("skip")) null else j.optString("skip").ifBlank { null },
+                if (j.isNull("date")) null else j.optString("date").ifBlank { null },
+                if (j.isNull("ev")) null else j.optString("ev").ifBlank { null },
             )
         }
     }

@@ -54,6 +54,14 @@ import java.util.Locale
 private val DAYS = listOf("L", "M", "X", "J", "V", "S", "D")
 private val ES = Locale("es", "ES")
 
+/** Texto de repetición; las alarmas de una fecha concreta muestran la fecha. */
+fun whenText(a: Alarm): String = a.date?.let { ds ->
+    runCatching {
+        val d = java.time.LocalDate.parse(ds)
+        d.format(DateTimeFormatter.ofPattern("EEE d MMM", ES)).replaceFirstChar { it.uppercase() }
+    }.getOrNull()
+} ?: daysText(a.days)
+
 fun daysText(days: Set<Int>): String = when {
     days.isEmpty() -> "Una vez"
     days.size == 7 -> "Todos los días"
@@ -87,7 +95,7 @@ fun AlarmsScreen() {
                 Row(Modifier.padding(start = 18.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("%02d:%02d".format(a.hour, a.minute), style = T.huge.copy(color = if (a.enabled) C.Ink else C.Muted))
-                        Text(listOf(a.label.ifBlank { null }, daysText(a.days)).filterNotNull().joinToString(" · "), style = T.small)
+                        Text(listOf(a.label.ifBlank { null }, whenText(a)).filterNotNull().joinToString(" · "), style = T.small)
                         if (a.enabled) {
                             if (snooze > 0) Text("Pospuesta hasta las " + java.time.Instant.ofEpochMilli(snooze).atZone(java.time.ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm")), style = T.small.copy(color = C.Orange))
                             if (next != null) Text("Sonará ${relative(now, next)}", style = T.small.copy(color = C.Ink))

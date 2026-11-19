@@ -42,6 +42,12 @@ object Scheduler {
     /** Próxima vez que debe sonar, teniendo en cuenta días y condiciones. Devuelve también los días saltados. */
     fun next(ctx: Context, a: Alarm, from: LocalDateTime = LocalDateTime.now()): Pair<LocalDateTime?, List<Pair<LocalDate, String>>> {
         val skipped = mutableListOf<Pair<LocalDate, String>>()
+        // Alarma de un día concreto: suena ese día a esa hora o ya no suena
+        a.date?.let { ds ->
+            val d = runCatching { LocalDate.parse(ds) }.getOrNull() ?: return null to skipped
+            val at = d.atTime(a.hour, a.minute)
+            return (if (at.isAfter(from)) at else null) to skipped
+        }
         var day = from.toLocalDate()
         for (i in 0 until 60) {
             val at = day.atTime(a.hour, a.minute)

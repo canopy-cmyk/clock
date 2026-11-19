@@ -34,7 +34,9 @@ object Store {
 
     fun alarm(id: Int) = alarms().firstOrNull { it.id == id }
 
-    fun saveAlarm(al: Alarm) {
+    fun saveAlarm(alarm: Alarm) {
+        // si se le ponen días de la semana deja de ser de una fecha concreta
+        val al = if (alarm.days.isNotEmpty() && alarm.date != null) alarm.copy(date = null) else alarm
         val list = alarms().filter { it.id != al.id } + al
         putArr("alarms", JSONArray(list.map { it.toJson() }))
     }

@@ -3,6 +3,7 @@
 App de reloj para Android con estética funcionalista: 12 relojes propios (analógicos, digitales y aparatos de los 70), cada uno con sus colores y su widget.
 
 - Alarmas con condiciones: festivos, eventos del calendario (DAVx5/Radicale), omitir la próxima.
+- Alarmas de una fecha concreta creadas desde la app Calendario para un evento (una por evento; se sustituyen o quitan desde allí).
 - Tonos sintetizados en el móvil (cuarzo, doble campana, chirrido digital, gong) con tono, cadencia, subida de volumen y volumen editables.
 - Temporizadores con presets, intervalos personalizables, cronómetro con vueltas.
 - Reloj mundial con diferencia legible, amanecer, atardecer, hora azul y hora dorada sin conexión.
